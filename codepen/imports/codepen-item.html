@@ -1,0 +1,215 @@
+<template id="template-main">
+	<style type="text/css">
+		pre {
+			max-height: 500px;
+			overflow: auto;
+		}
+		code[class*="language-"],
+		pre[class*="language-"] {
+		  color: #f8f8f2;
+		  text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+		  font-family: Consolas, Monaco, 'Andale Mono', monospace;
+		  direction: ltr;
+		  text-align: left;
+		  white-space: pre;
+		  word-spacing: normal;
+		  word-break: normal;
+		  line-height: 1.5;
+		  -moz-tab-size: 4;
+		  -o-tab-size: 4;
+		  tab-size: 4;
+		  -webkit-hyphens: none;
+		  -moz-hyphens: none;
+		  -ms-hyphens: none;
+		  hyphens: none;
+		}
+		pre[class*="language-"] {
+		  padding: 0 15px 15px 15px;
+		  overflow: auto;
+		  font-size: 10px;
+		  font-size: 1rem;
+		  margin: 0;
+		}
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+		  background: #4e606c;
+		}
+		:not(pre) > code[class*="language-"] {
+		  padding: .1em;
+		  border-radius: .3em;
+		}
+		.token.comment,
+		.token.prolog,
+		.token.doctype,
+		.token.cdata {
+		  color: #9cacb7;
+		}
+		.token.punctuation {
+		  color: #f8f8f2;
+		}
+		.namespace {
+		  opacity: .7;
+		}
+		.token.function {
+		  color: #F5755A;
+		}
+		.token.property,
+		.token.tag,
+		.token.constant,
+		.token.symbol {
+		  color: #71D4B7;
+		}
+		.token.boolean,
+		.token.number {
+		  color: #ae81ff;
+		}
+		.token.selector,
+		.token.attr-name,
+		.token.string,
+		.token.char,
+		.token.builtin {
+		  color: #FC659A;
+		}
+		.token.operator,
+		.token.entity,
+		.token.url,
+		.language-css .token.string,
+		.style .token.string,
+		.token.variable {
+		  color: #EFB26E;
+		}
+		.token.atrule,
+		.token.attr-value {
+		  color: #e6db74;
+		}
+		.token.keyword {
+		  color: #66d9ef;
+		}
+		.token.regex,
+		.token.important {
+		  color: #fd971f;
+		}
+		.token.important {
+		  font-weight: bold;
+		}
+		.token.entity {
+		  cursor: help;
+		}
+		.token.deleted {
+		  color: red;
+		}
+		.token.inserted {
+		  color: green;
+		}
+		pre.line-numbers {
+		  position: relative;
+		  padding-left: 55px;
+		  counter-reset: linenumber;
+		}
+		pre.line-numbers > code {
+		  position: relative;
+		}
+		.line-numbers .line-numbers-rows {
+		  position: absolute;
+		  pointer-events: none;
+		  top: 22px;
+		  font-size: 100%;
+		  left: -40px;
+		  width: 40px;
+		  /* works for line-numbers below 1000 lines */
+		  letter-spacing: -1px;
+		  color: #879BA6;
+		  -webkit-user-select: none;
+		  -moz-user-select: none;
+		  -ms-user-select: none;
+		  user-select: none;
+		}
+		.line-numbers .line-numbers-rows > span {
+		  pointer-events: none;
+		  display: block;
+		  counter-increment: linenumber;
+		}
+		.line-numbers .line-numbers-rows > span:before {
+		  content: counter(linenumber);
+		  color: #999;
+		  display: block;
+		  padding-right: 0.8em;
+		  text-align: right;
+		}
+		::-webkit-scrollbar {
+		  background: rgba(255, 255, 255, 0.1);
+		}
+		::-webkit-scrollbar:horizontal {
+		  height: 10px;
+		}
+		::-webkit-scrollbar:vertical {
+		  width: 10px;
+		}
+		::-webkit-scrollbar-track {
+		  display: none;
+		}
+		::-webkit-scrollbar-thumb {
+		  background: #384a56;
+		}
+		::-webkit-scrollbar-corner {
+		  background: rgba(255, 255, 255, 0.1);
+		}
+	</style>
+	<div id="panel">
+		<pre><code></code></pre>
+	</div>
+</template>
+
+<script type="text/javascript" src="prism.js"></script>
+<script type="text/javascript">
+	(function(global) {
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		function createdCallback() {
+			var that = this;
+			var shadowRoot = that.createShadowRoot();
+			shadowRoot.appendChild(getTemplate('#template-main'));
+			that.panel = shadowRoot.querySelector('#panel');
+		}
+
+		function init(type, cid, user) {
+			var that = this;
+			var pre = that.panel.querySelector('pre');
+			var code = pre.querySelector('code');
+			pre.className = 'line-numbers language-' + (type === 'html' ? 'markup' : type);
+
+			var url = 'http://codepen.io/' + user + '/pen/' + cid + '.';
+			url += type === 'javascript' ? 'js' : type;
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", url, true);
+			xhr.send();
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState == 4 && xhr.status == 200) {
+					var tmpDiv = document.createElement('div');
+					tmpDiv.textContent = '\n' + xhr.responseText;
+					code.innerHTML = tmpDiv.innerHTML;
+					Prism.highlightElement(code);
+				}
+			}
+		}
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: createdCallback
+			},
+			init: {
+				value: init
+			}
+		});
+
+		var HTMLCodepenItemElement = document.registerElement('codepen-item', {
+			prototype: proto
+		});
+
+		global.HTMLCodepenItemElement = HTMLCodepenItemElement;
+	}(this));
+</script>
