@@ -1,52 +1,11 @@
-<link rel="import" href="slider-nav.html">
-
 <template id="template-main">
 	<style type="text/css">
-		#slider {
-			position: relative;
-			border-radius: 5px;
-			width: 800px;
-			height: 400px;
-			overflow: hidden;
-		}
-		#slider:before {
-			content: "";
-			position: absolute;
-			width: 100%;
-			height: 5px;
-			top: 0;
-			left: 0;
-			z-index: 1;
-			background: rgba(255, 255, 255, 0.2);
-			visibility: visible;
-		}
-		#slider:after {
-			content: "";
-			position: absolute;
-			width: 100%;
-			height: 5px;
-			bottom: 0;
-			left: 0;
-			z-index: 1;
-			background: rgba(64, 64, 64, 0.1);
-			visibility: visible;
-		}
-		#images {
-			position: absolute;
-			white-space: nowrap;
-			transition: all 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
-		}
-		#images img {
-			width: 800px;
-			height: 400px;
-			display: inline-block;
-		}
 		#nav {
 			position: absolute;
 			width: 100%;
 			height: 100%;
 		}
-		#nav .left {
+		#left {
 			position: absolute;
 			left: 30px;
 			top: 50%;
@@ -58,11 +17,11 @@
 			transform: rotate(45deg);
 			cursor: pointer;
 		}
-		#nav .left:hover {
+		#left:hover {
 			border-left: 5px solid #ff6900;
 			border-bottom: 5px solid #ff6900;
 		}
-		#nav .right {
+		#right {
 			position: absolute;
 			right: 30px;
 			top: 50%;
@@ -74,7 +33,7 @@
 			transform: rotate(45deg);
 			cursor: pointer;
 		}
-		#nav .right:hover {
+		#right:hover {
 			border-right: 5px solid #ff6900;
 			border-top: 5px solid #ff6900;
 		}
@@ -100,16 +59,19 @@
 			transform: scale(1.2);
 		}
 	</style>
-	<section id="slider">
-		<div id="images">
-		</div>
-	</section>
+	<div id="nav">
+		<span id="left"></span>
+		<span id="right"></span>
+		<ul id="direct"></ul>
+	</div>
 </template>
 
 <script type="text/javascript">
 	(function(global) {
 		var currentDocument = document.currentScript.ownerDocument;
-		var width = 800;
+
+		var cur = 0;
+		var size;
 
 		function getTemplate(selector) {
 			return currentDocument.querySelector(selector).content.cloneNode(true);
@@ -120,43 +82,68 @@
 			var shadowRoot = that.createShadowRoot();
 			var imgs = that.querySelectorAll('img');
 			shadowRoot.appendChild(getTemplate('#template-main'));
+			that.nav = shadowRoot;
+		}
 
-			var images= shadowRoot.querySelector('#images');
-			var nav = document.createElement('slider-nav');
+		function init(num) {
+			var that = this;
+			var nav = that.nav;
+			var direct = nav.querySelector('#direct');
+			var lis = [];
+			size = num;
 
-			shadowRoot.querySelector('#slider').appendChild(nav);
-
-			var size = imgs.length;
-			var i;
-
-			var cur = 0;
-
-			function show(cur){
-				images.style['transform'] = 'translateX(-' + (cur * width) + 'px)';
+			function changeTo(cur){
+				var on = direct.querySelector('.on');
+				on && on.classList.remove('on');
+				lis[cur].classList.add('on');
+				that.dispatchEvent(new CustomEvent('change', {detail: cur}));
 			}
 
-			for(i = 0;i < size;i++){
-				images.appendChild(imgs[i]);
+			function directTo(dest){
+				return function(){
+					cur = dest;
+					changeTo(cur);
+				};
 			}
 
-			nav.init(size);
+			(function(){
+				var i;
+				var li;
+				for (i = 0; i < num; i++) {
+					li = document.createElement('li');
+					direct.appendChild(li);
+					li.onclick = directTo(i);
+					lis.push(li);
+				}
+			}());
+			
 
-			nav.addEventListener('change', function(e){
-				show(e.detail);
-			});
+			nav.querySelector('#left').onclick = function(){
+				cur = (cur - 1 + size) % size;
+				changeTo(cur);
+			};
 
+			nav.querySelector('#right').onclick = function(){
+				cur = (cur + 1 + size) % size;
+				changeTo(cur);
+			};
+
+			changeTo(0);
 		}
 
 		var proto = Object.create(HTMLElement.prototype, {
 			createdCallback: {
 				value: createdCallback
+			},
+			init: {
+				value: init
 			}
 		});
 
-		var HTMLImageSliderElement = document.registerElement('image-slider', {
+		var HTMLSliderNavElement = document.registerElement('slider-nav', {
 			prototype: proto
 		});
 
-		global.HTMLImageSliderElement = HTMLImageSliderElement;
+		global.HTMLSliderNavElement = HTMLSliderNavElement;
 	}(this));
 </script>
