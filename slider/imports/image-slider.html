@@ -1,0 +1,184 @@
+<template id="template-main">
+	<style type="text/css">
+		#slider {
+			position: relative;
+			border-radius: 5px;
+			width: 800px;
+			height: 400px;
+			overflow: hidden;
+		}
+		#slider:before {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 5px;
+			top: 0;
+			left: 0;
+			z-index: 1;
+			background: rgba(255, 255, 255, 0.2);
+			visibility: visible;
+		}
+		#slider:after {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 5px;
+			bottom: 0;
+			left: 0;
+			z-index: 1;
+			background: rgba(64, 64, 64, 0.1);
+			visibility: visible;
+		}
+		#images {
+			position: absolute;
+			white-space: nowrap;
+			transition: all 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
+		}
+		#images img {
+			width: 800px;
+			height: 400px;
+			display: inline-block;
+		}
+		#nav {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+		}
+		#nav .left {
+			position: absolute;
+			left: 30px;
+			top: 50%;
+			margin-top: -15px;
+			width: 30px;
+			height: 30px;
+			border-left: 5px solid #fff;
+			border-bottom: 5px solid #fff;
+			transform: rotate(45deg);
+			cursor: pointer;
+		}
+		#nav .left:hover {
+			border-left: 5px solid #ff6900;
+			border-bottom: 5px solid #ff6900;
+		}
+		#nav .right {
+			position: absolute;
+			right: 30px;
+			top: 50%;
+			margin-top: -15px;
+			width: 30px;
+			height: 30px;
+			border-right: 5px solid #fff;
+			border-top: 5px solid #fff;
+			transform: rotate(45deg);
+			cursor: pointer;
+		}
+		#nav .right:hover {
+			border-right: 5px solid #ff6900;
+			border-top: 5px solid #ff6900;
+		}
+		#direct {
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			padding: 0;
+			transform: translateX(-50%);
+		}
+		#direct li{
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			margin-right: 6px;
+			border-radius: 50%;
+			background-color: #fff;
+			cursor: pointer;
+			transition: all 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
+		}
+		#direct li.on{
+			background-color:  #ff6900;
+			transform: scale(1.2);
+		}
+	</style>
+	<section id="slider">
+		<div id="images">
+		</div>
+		<div id="nav">
+			<span class="left"></span>
+			<span class="right"></span>
+			<ul id="direct"></ul>
+		</div>
+	</section>
+</template>
+
+<script type="text/javascript">
+	(function(global) {
+		var currentDocument = document.currentScript.ownerDocument;
+
+		var width = 800;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		function createdCallback() {
+			var that = this;
+			var shadowRoot = that.createShadowRoot();
+			var imgs = that.querySelectorAll('img');
+			shadowRoot.appendChild(getTemplate('#template-main'));
+
+			var images= shadowRoot.querySelector('#images');
+			var direct = shadowRoot.querySelector('#direct');
+			var size = imgs.length;
+			var i;
+
+			var cur = 0;
+			var nav = [];
+
+			function show(cur){
+				var on = direct.querySelector('.on');
+				if(on) {
+					on.classList.remove('on');
+				}
+				nav[cur].classList.add('on');
+				images.style['transform'] = 'translateX(-' + (cur * width) + 'px)';
+			}
+
+			function directTo(dest) {
+				return function(){
+					show(dest);
+				};
+			}
+
+			for(i = 0;i < size;i++){
+				images.appendChild(imgs[i]);
+				var li = document.createElement('li');
+				li.onclick = directTo(i);
+				direct.appendChild(li);
+				nav.push(li);
+			}
+			show(0);
+
+			var left = shadowRoot.querySelector('#nav .left');
+			var right = shadowRoot.querySelector('#nav .right');
+			left.onclick = function(){
+				cur = (cur - 1 + size) % size;
+				show(cur);
+			};
+			right.onclick = function(){
+				cur = (cur + 1 + size) % size;
+				show(cur);
+			};
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: createdCallback
+			}
+		});
+
+		var HTMLImageSliderElement = document.registerElement('image-slider', {
+			prototype: proto
+		});
+
+		global.HTMLImageSliderElement = HTMLImageSliderElement;
+	}(this));
+</script>
