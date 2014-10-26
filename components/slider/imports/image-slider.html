@@ -1,0 +1,97 @@
+<link rel="import" href="slider-nav.html">
+
+<template id="template-main">
+	<style type="text/css">
+		#slider {
+			position: relative;
+			border-radius: 5px;
+			width: 800px;
+			height: 400px;
+			overflow: hidden;
+		}
+		#slider:before {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 5px;
+			top: 0;
+			left: 0;
+			z-index: 1;
+			background: rgba(255, 255, 255, 0.2);
+			visibility: visible;
+		}
+		#slider:after {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 5px;
+			bottom: 0;
+			left: 0;
+			z-index: 1;
+			background: rgba(64, 64, 64, 0.1);
+			visibility: visible;
+		}
+		#images {
+			position: absolute;
+			white-space: nowrap;
+			transition: all 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
+			font-size: 0;
+		}
+		::content img {
+			width: 800px;
+			height: 400px;
+			display: inline-block;
+		}
+	</style>
+	<section id="slider">
+		<div id="images">
+			<content></content>
+		</div>
+	</section>
+</template>
+
+<script type="text/javascript">
+	(function(global) {
+		var currentDocument = document.currentScript.ownerDocument;
+		var width = 800;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		function createdCallback() {
+			var that = this;
+			var shadowRoot = that.createShadowRoot();
+			var imgs = that.querySelectorAll('img');
+			shadowRoot.appendChild(getTemplate('#template-main'));
+
+			var images= shadowRoot.querySelector('#images');
+			var nav = document.createElement('slider-nav');
+
+			shadowRoot.querySelector('#slider').appendChild(nav);
+
+			function show(cur){
+				images.style['transform'] = 'translateX(-' + (cur * width) + 'px)';
+			}
+
+			nav.init(imgs.length);
+
+			nav.addEventListener('change', function(e){
+				show(e.detail);
+			});
+
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: createdCallback
+			}
+		});
+
+		var HTMLImageSliderElement = document.registerElement('image-slider', {
+			prototype: proto
+		});
+
+		global.HTMLImageSliderElement = HTMLImageSliderElement;
+	}(this));
+</script>
