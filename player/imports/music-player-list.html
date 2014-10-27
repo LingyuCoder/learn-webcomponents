@@ -1,0 +1,63 @@
+<link rel="import" href="music-player-list-item.html">
+
+<template id="template-main">
+	<style type="text/css">
+		#list {
+			position: absolute;
+			left: 62%;
+			right: 0;
+			top: 0;
+			bottom: 0;
+		}
+	</style>
+	<ul id="list">
+		
+	</ul>
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+					that.list = shadowRoot.querySelector('#list');
+				}
+			},
+			add: {
+				value: function(music) {
+					var that = this;
+					var li = document.createElement('music-player-list-item');
+					li.init(music);
+
+					li.addEventListener('delete', function() {
+						that.list.removeChild(li);
+						that.dispatchEvent(new CustomEvent('delete', {
+							detail: music
+						}));
+					});
+					li.onclick = function() {
+						that.dispatchEvent(new CustomEvent('play', {
+							detail: music
+						}));
+					};
+					that.list.appendChild(li);
+				}
+			}
+		});
+
+		var HTMLMusicPlayerListElement = document.registerElement('music-player-list', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerListElement = HTMLMusicPlayerListElement;
+	}(this));
+</script>

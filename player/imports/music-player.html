@@ -1,0 +1,158 @@
+<link rel="import" href="music-player-detail.html">
+<link rel="import" href="music-player-list.html">
+<link rel="import" href="music-player-control.html">
+
+<template id="template-main">
+	<style type="text/css">
+		#audio {
+			display: none;
+		}
+		#player {
+			position: relative;
+			width: 600px;
+			height: 370px;
+			border-radius: 5px;
+			overflow: hidden;
+		}
+		.back {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			background-image: url(http://lingyucoder-demo.qiniudn.com/imgsliders_1.jpg);
+			-moz-filter: blur(3px);
+		    -webkit-filter: blur(3px);
+		    -o-filter: blur(3px);
+		    -ms-filter: blur(3px);
+		    filter: blur(3px);
+		}
+	</style>
+	<audio id="audio"></audio>
+	<div id="player">
+		<div class="back"></div>
+	</div>
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		var musics = [];
+		var gid = 0;
+		var cur = 0;
+
+		function getGid (){
+			return ++gid;
+		}
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					var list, detail, control,audio;
+					shadowRoot.appendChild(getTemplate('#template-main'));
+					audio = that.audio = shadowRoot.querySelector('#audio');
+
+					var player = shadowRoot.querySelector('#player');
+
+					player.appendChild(detail = that.detail = document.createElement('music-player-detail'));
+					player.appendChild(control = that.control = document.createElement('music-player-control'));
+					player.appendChild(list = that.list = document.createElement('music-player-list'));
+
+
+
+					list.addEventListener('delete', function(event){that.remove(event.detail); });
+					list.addEventListener('play', function(event){that.play(event.detail); });
+					control.addEventListener('next', function(){that.next(); });
+					control.addEventListener('prev', function(){that.prev(); });
+					control.addEventListener('play', function(){that.play(); });
+					control.addEventListener('pause', function(){that.pause(); });
+					control.addEventListener('volume', function(event){that.volume(event.detail); });
+					audio.addEventListener('volumechange', function(){control.setVolume(audio.volume); });
+					audio.addEventListener('ended', function(){that.next(); });
+					audio.addEventListener('pause', function(){that.control.setPaused(true); });
+					audio.addEventListener('play', function(){that.control.setPaused(false); });
+
+					control.setVolume(audio.volume);
+				}
+			},
+			add: {
+				value: function(music){
+					var that = this;
+					musics.push(music);
+					that.list.add(music);
+				}
+			},
+			remove: {
+				value: function(music){
+					var index = musics.indexOf(music);
+					if(index !== -1) {
+						musics.splice(index, 1);
+					}
+				}
+			},
+			play: {
+				value: function(music){
+					var that = this;
+					that.playMusic();;
+				}
+			},
+			pause: {
+				value: function(){
+					var that = this;
+					that.audio.pause();
+				}
+			},
+			next: {
+				value: function(){
+					var that = this;
+					var length = musics.length;
+					that.playMusic(musics[(cur + 1) % length]);
+				}
+			},
+			prev: {
+				value: function(){
+					var that = this;
+					var length = musics.length;
+					that.playMusic(musics[(cur - 1 + length) % length]);
+				}
+			},
+			playMusic: {
+				value: function(music){
+					var that = this;
+					if (music) {
+						cur = musics.indexOf(music);
+						if (cur === -1) {
+							musics.push(music);
+							cur = musics.length - 1;
+						}
+						
+					} else {
+						music = musics[cur];
+					}
+					if (!music) {
+						return;
+					}
+					that.audio.setAttribute('src', music.src);
+					that.audio.play();
+				}
+			},
+			volume: {
+				value : function(volume){
+					var that = this;
+					that.audio.volume = volume;
+				}
+			}
+		});
+
+		var HTMLMusicPlayerElement = document.registerElement('music-player', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerElement = HTMLMusicPlayerElement;
+	}(this));
+</script>

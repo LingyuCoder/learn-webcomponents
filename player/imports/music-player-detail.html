@@ -1,0 +1,38 @@
+<template id="template-main">
+	<style type="text/css">
+		#detail {
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 60px;
+			right: 38%;
+		}
+	</style>
+	<div id="detail"></div>
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+				}
+			}
+		});
+
+		var HTMLMusicPlayerDetailElement = document.registerElement('music-player-detail', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerDetailElement = HTMLMusicPlayerDetailElement;
+	}(this));
+</script>

@@ -1,0 +1,209 @@
+<template id="template-main">
+	<style type="text/css">
+		#control {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 38%;
+			height: 60px;
+			opacity: .6;
+		}
+		ul {
+			padding: 0;
+			margin: 0;
+		}
+		li {
+			list-style: none;
+			display: block;
+			margin-left: 10px;
+			height: 100%;
+			float: left;
+			line-height: 60px;
+			text-align: center;
+			cursor: pointer;
+		}
+		span {
+			display: inline-block;
+			position: relative;
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			background-color: #b2d4dc;
+			color: #fff;
+		}
+		/* span:hover {
+			background-color: rgba(255, 105, 0, .6);
+		} */
+
+		#prev:before,
+		#prev:after{
+			content: '';
+			position: absolute;
+			width: 0;
+			height: 0;
+			border-right: 15px solid #3e6372;
+			border-top: 10.65px solid transparent;
+			border-bottom: 10.65px solid transparent;
+			top: 50%;
+			transform: translateY(-50%);
+		}
+		#prev:before {left: 8px;}
+		#prev:after {left: 20px;}
+
+		#play.pause:before{
+			content: '';
+			position: absolute;
+			width: 0;
+			height: 0;
+			border-left: 20px solid #3e6372;
+			border-top: 14.14px solid transparent;
+			border-bottom: 14.14px solid transparent;
+			top: 50%;
+			left: 18px;
+			transform: translateY(-50%);
+			background: none;
+		}
+
+		#play.pause:after {
+			display: none;
+		}
+
+		#play:before,
+		#play:after {
+			content: '';
+			position: absolute;
+			width: 10px;
+			height: 25px;
+			background-color: #3e6372;
+			top: 50%;
+			transform: translateY(-50%);
+			border: none;
+		}
+
+		#play:before{
+			left: 12px;
+		}
+
+		#play:after{
+			left: 27px;
+		}
+
+		#next:before,
+		#next:after{
+			content: '';
+			position: absolute;
+			width: 0;
+			height: 0;
+			border-left: 15px solid #3e6372;
+			border-top: 10.65px solid transparent;
+			border-bottom: 10.65px solid transparent;
+			top: 50%;
+			transform: translateY(-50%);
+		}
+		#next:before {right: 8px;}
+		#next:after {right: 20px;}
+	
+		#volume {
+			position: relative;
+			overflow: hidden;
+		}
+
+		#volume em {
+			position: absolute;
+			width: 100%;
+			background-color: #3e6372;
+			left: 0;
+			bottom: 0;
+		}
+
+	</style>
+	<ul id="control">
+		<li><span id="prev" class="iconfont">&#xe603;</span></li>
+		<li><span id="play" class="pause iconfont">&#xe600;</span></li>
+		<li><span id="next" class="iconfont">&#xe602;</span></li>
+		<li><span id="volume" data-volume=50 class="iconfont"><em></em></span></li>
+	</ul>
+</template>
+
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+
+					var prev = that.prev = shadowRoot.querySelector('#prev');
+					var play = that.play = shadowRoot.querySelector('#play');
+					var next = that.next = shadowRoot.querySelector('#next');
+					var volume = that.volume = shadowRoot.querySelector('#volume');
+
+					prev.onclick = function(){
+						that.dispatchEvent(new CustomEvent('prev'));
+					};
+					play.onclick = function(){
+						if(this.classList.contains('pause')) {
+							that.dispatchEvent(new CustomEvent('play'));
+							this.classList.remove('pause');
+						} else {
+							that.dispatchEvent(new CustomEvent('pause'));
+							this.classList.add('pause');
+						}
+					};
+					next.onclick = function(){
+						that.dispatchEvent(new CustomEvent('next'));
+					};
+					volume.onmousewheel = function(event){
+						var value;
+						if(event.wheelDelta >= 120) {
+							value = +volume.dataset.volume + 5;
+						} else if (event.wheelDelta <= -120) {
+							value = +volume.dataset.volume - 5;
+						}
+						value = value > 100 ? 100:value;
+						value = value < 0 ? 0: value;
+						volume.dataset.volume = value;
+						console.log(value);
+						that.setVolume(value / 100);
+						that.dispatchEvent(new CustomEvent('volume', {
+							detail: value / 100
+						}));
+					};
+				}
+			},
+			setPaused: {
+				value: function(paused) {
+					var that = this;
+					if (paused) {
+						that.play.classList.add('pause');
+					} else {
+						that.play.classList.remove('pause');
+					}
+				}
+			},
+			setVolume: {
+				value: function(volume){
+					var that = this;
+					var value = volume * 100;
+					that.volume.dataset.volume = value;
+					that.volume.querySelector('em').style.height = value + '%';
+
+				}
+			}
+		});
+
+		var HTMLMusicPlayerControlElement = document.registerElement('music-player-control', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerControlElement = HTMLMusicPlayerControlElement;
+	}(this));
+</script>

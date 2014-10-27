@@ -1,0 +1,55 @@
+<template id="template-main">
+	<style type="text/css">
+		#item {
+			color: #fff;
+		}
+		#delete {
+			cursor: pointer;
+		}
+	</style>
+	<li id="item">
+		<span id="name"></span>
+		<span id="author"></span>
+		<span id="delete"></span>
+	</li>
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+					that.item = shadowRoot.querySelector('#item');
+					that.item.querySelector('#delete').onclick = function(event){
+						event.stopPropagation();
+						event.preventDefault();
+						that.dispatchEvent(new CustomEvent('delete'));
+					};
+				}
+			},
+			init: {
+				value: function(music) {
+					var item = this.item;
+					item.querySelector('#name').textContent = music.name;
+					item.querySelector('#author').textContent = music.author;
+					item.querySelector('#delete').textContent = '删除';
+				}
+			}
+		});
+
+		var HTMLMusicPlayerListItemElement = document.registerElement('music-player-list-item', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerListItemElement = HTMLMusicPlayerListItemElement;
+	}(this));
+</script>
