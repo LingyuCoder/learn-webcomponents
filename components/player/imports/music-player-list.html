@@ -1,0 +1,125 @@
+<link rel="import" href="music-player-list-item.html">
+
+<template id="template-main">
+	<style type="text/css">
+		#container {
+			position: absolute;
+			left: 62%;
+			right: 10px;
+			top: 0;
+			bottom: 90px;
+			margin: 0;
+			padding: 0;
+			transform: translateY(-270px);
+			background-color: rgba(178,212,220, .7);
+			transition: transform 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
+
+			border-bottom-right-radius: 5px;
+			border-bottom-left-radius: 5px;
+		}
+		#container:hover{
+			transform: translateY(0px);
+		}
+		#list {
+			overflow-y: auto;
+			height: 250px;
+			padding: 10px;
+		}
+		::-webkit-scrollbar {
+		  background: rgba(255, 255, 255, 0.1);
+		}
+		::-webkit-scrollbar:horizontal {
+		  height: 10px;
+		}
+		::-webkit-scrollbar:vertical {
+		  width: 10px;
+		}
+		::-webkit-scrollbar-track {
+		  display: none;
+		}
+		::-webkit-scrollbar-thumb {
+		  background: #3e6372;
+		}
+		::-webkit-scrollbar-corner {
+		  background: rgba(255, 255, 255, 0.1);
+		}
+		#toggle {
+			position: absolute;
+			bottom: -10px;
+			left: 50%;
+			margin-left: -10px;
+			width: 0;
+			height: 0;
+			border-top: 10px solid rgba(178,212,220, .7);
+			border-left: 10px solid transparent;
+			border-right: 10px solid transparent;
+		}
+	</style>
+	<div id="container">
+		<div id="list"></div>
+		<span id="toggle"></span>
+	</div>
+	
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+					that.list = shadowRoot.querySelector('#list');
+				}
+			},
+			add: {
+				value: function(music) {
+					var that = this;
+					var item = document.createElement('music-player-list-item');
+					item.init(music);
+
+					item.addEventListener('delete', function() {
+						that.list.removeChild(item);
+						that.dispatchEvent(new CustomEvent('delete', {
+							detail: music
+						}));
+					});
+					item.onclick = function() {
+						that.dispatchEvent(new CustomEvent('play', {
+							detail: music
+						}));
+						var last = that.list.querySelector('.on');
+						if(last) {
+							last.classList.remove('on');
+							last.setCur(false);
+						}
+						item.classList.add('on');
+						item.setCur(true);
+					};
+					that.list.appendChild(item);
+				}
+			},
+			setCur: {
+				value: function(cur){
+					var item = this.list.querySelectorAll('music-player-list-item')[cur];
+					if(item) {
+						item.click();
+					}
+				}
+			}
+		});
+
+		var HTMLMusicPlayerListElement = document.registerElement('music-player-list', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerListElement = HTMLMusicPlayerListElement;
+	}(this));
+</script>
