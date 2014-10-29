@@ -1,0 +1,242 @@
+<link rel="import" href="codepen-item.html">
+<link rel="import" href="codepen-preview.html">
+
+<template id="template-main">
+	<style type="text/css">
+		.code-editor {
+		  position: relative;
+		  font-family: open-sans, Arial, sans-serif;
+		  font-size: 62.5%;
+		  width: 800px;
+		  border-radius: 5px;
+		  overflow: hidden;
+		}
+		.code-editor:before {
+		  content: "";
+		  position: absolute;
+		  width: 100%;
+		  height: 5px;
+		  top: 0;
+		  left: 0;
+		  z-index: 1;
+		  background: rgba(255, 255, 255, 0.2);
+		  visibility: visible;
+		}
+		.code-editor:after {
+		  content: "";
+		  position: absolute;
+		  width: 100%;
+		  height: 5px;
+		  bottom: 0;
+		  left: 0;
+		  z-index: 1;
+		  background: rgba(64, 64, 64, 0.1);
+		  visibility: visible;
+		}
+		.code-editor *:after,
+		.code-editor *:before {
+		  -moz-box-sizing: border-box;
+		  -webkit-box-sizing: border-box;
+		  box-sizing: border-box;
+		  -webkit-font-smoothing: antialiased;
+		  font-smoothing: antialiased;
+		  font-smooth: always;
+		}
+		.code-editor .panel {
+		  position: relative;
+		  z-index: 2;
+		  background-color: #4e606c;
+		  transition: all .3s ease-out;
+		  max-height: 515px;
+		}
+
+		.code-editor .panel.fold {
+		  max-height: 0;
+		}
+
+		.code-editor h1 {
+		  display: none;
+		  font-family: Rockwell, "Courier Bold", Courier, Georgia, Times, "Times New Roman", serif;
+		  font-size: 18px;
+		  color: #000;
+		  background-color: #fff;
+		  padding: 10px;
+		  position: absolute;
+		  left: 55px;
+		  top: 10px;
+		  box-shadow: 4px 3px 0px rgba(0, 0, 0, 0.15);
+		  z-index: 999;
+		}
+		.code-editor h1:hover {
+		  display: block;
+		}
+		.code-editor h1 a {
+		  color: #000;
+		}
+		.code-editor h1 a:visited {
+		  color: #000;
+		}
+		.code-editor h1 a:hover {
+		  color: #000;
+		}
+		.code-editor .nav {
+		  background-color: #384a56;
+		  padding: 15px;
+		}
+		.code-editor .nav ul {
+		  margin: 0;
+		  padding: 0;
+		}
+		.code-editor .nav ul li {
+		  display: inline-block;
+		  margin-right: 10px;
+		  list-style: none;
+		  font-size: 8px;
+		  font-size: 0.8rem;
+		  color: #BAC1C9;
+		  padding: 5px 10px;
+		  -webkit-border-radius: 15px;
+		  -ms-border-radius: 15px;
+		  -moz-border-radius: 15px;
+		  -o-border-radius: 15px;
+		  border-radius: 15px;
+		  cursor: pointer;
+		  -webkit-touch-callout: none;
+		  user-select: none;
+		}
+
+		.code-editor .nav ul li.on {
+		  background-color: #233038;
+		}
+
+		.code-editor .nav ul li:hover {
+		  color: #ff6900;
+		}
+		.code-editor .nav .logo-wrap {
+		  display: none;
+		}
+		.code-editor .nav .toggle {
+		  float: right;
+		  position: relative;
+		  display: inline-block;
+		  line-height: 30px;
+		  height: 30px;
+		  width: 30px;
+		  overflow: hidden;
+		  cursor: pointer;
+		}
+		.code-editor .nav .toggle:hover:after {
+			border-bottom: 3px solid #ff6900;
+		  	border-right: 3px solid #ff6900;
+		}	
+		.code-editor .nav .toggle:after {
+		  content: '';
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  height: 15px;
+		  width: 15px;
+		  transform: rotate(45deg);
+		  transform-origin: 10px 10px;
+		  transition: all .3s ease-out;
+		  border-bottom: 3px solid #BAC1C9;
+		  border-right: 3px solid #BAC1C9;
+		}
+		.code-editor .nav .toggle.open:after {
+		  transform: rotate(225deg);
+		}
+
+		.hide {
+			display: none
+		}
+
+	</style>
+	<section class="code-editor">
+		<div class='nav'>
+			<span id="toggle" class="toggle"></span>
+			<ul id="nav"></ul>
+		</div>
+		<div id="panels" class="panel"></div>
+	</section>
+</template>
+
+<script type="text/javascript">
+	(function(global) {
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		function createdCallback() {
+			var that = this;
+			var shadowRoot = that.createShadowRoot();
+
+			shadowRoot.appendChild(getTemplate('#template-main'));
+
+			var show = this.getAttribute('show').split(',');
+			var cid = this.getAttribute('cid');
+			var user = this.getAttribute('user');
+			var i, m;
+			var panels = shadowRoot.querySelector('#panels');
+			var nav = shadowRoot.querySelector('#nav');
+			var toggle = shadowRoot.querySelector('#toggle');
+			var item, navItem;
+			var items = [];
+			var navs = [];
+
+			function navClickCallback(item) {
+				return function(event) {
+					for(var i = navs.length;i--;){
+						if(navs[i] === this) {
+							navs[i].classList.add('on');
+							items[i].classList.remove('hide');
+						} else {
+							navs[i].classList.remove('on');
+							items[i].classList.add('hide');
+						}
+					}
+				};
+			}
+
+			toggle.onclick = function(event) {
+				toggle.classList.toggle('open');
+				panels.classList.toggle('fold');
+			};
+
+			for (i = 0, m = show.length; i < m; i++) {
+				if(show[i].toLowerCase() !== 'result') {
+					item = document.createElement('codepen-item');
+					item.init(show[i], cid, user);
+					panels.appendChild(item);
+					items.push(item);
+				} else {
+					item = document.createElement('codepen-preview');
+					item.init(cid);
+					panels.appendChild(item);
+					items.push(item);
+				}
+				
+				navItem = document.createElement('li');
+				navItem.textContent = show[i].toUpperCase();
+				nav.appendChild(navItem);
+				navItem.onclick = navClickCallback(item);
+				navs.push(navItem);
+			}
+
+			navs[0].click();
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: createdCallback
+			}
+		});
+
+		var HTMLCodepenElement = document.registerElement('codepen-panel', {
+			prototype: proto
+		});
+
+		global.HTMLCodepenElement = HTMLCodepenElement;
+	}(this));
+</script>

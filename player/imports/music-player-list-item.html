@@ -1,0 +1,96 @@
+<template id="template-main">
+	<style type="text/css">
+		#item {
+			color: #3e6372;
+			list-style: none;
+			padding-bottom: 5px;
+			border-bottom: 1px dashed #3e6372;
+			cursor: pointer;
+		}
+		#delete {
+			width: 20px;
+			height: 20px;
+			float: right;
+			cursor: pointer;
+			margin-top: 10px;
+			position: relative;
+		}
+		#delete:hover:after, 
+		#delete:hover:before {
+			background-color: #ff9600;
+		}
+		#delete:before,
+		#delete:after {
+			position: absolute;
+			content: '';
+			width: 2px;
+			height: 18px;
+			background-color: #3e6372;
+			margin-left: 10px;
+		}
+		#delete:before {
+			transform: rotate(45deg);
+		}
+		#delete:after {
+			transform: rotate(-45deg);
+		}
+		#name {
+			font-weight: bolder;
+		}
+	</style>
+	<div id="item">
+		<span id="delete"></span>
+		<div id="name"></div>
+		<span id="author"></span>
+	</div>
+</template>
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+					var item = that.item = shadowRoot.querySelector('#item');
+					that.name = shadowRoot.querySelector('#name');
+					item.querySelector('#delete').onclick = function(event){
+						event.stopPropagation();
+						event.preventDefault();
+						that.dispatchEvent(new CustomEvent('delete'));
+					};
+				}
+			},
+			init: {
+				value: function(music) {
+					var item = this.item;
+					item.querySelector('#name').textContent = music.name;
+					item.querySelector('#author').textContent = music.author;
+				}
+			},
+			setCur: {
+				value: function(cur){
+					var that = this;
+					if(cur) {
+						that.item.style.color = '#ff6900';
+					} else {
+						that.item.style.color = '#3e6372';
+					}
+				}
+			}
+		});
+
+		var HTMLMusicPlayerListItemElement = document.registerElement('music-player-list-item', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerListItemElement = HTMLMusicPlayerListItemElement;
+	}(this));
+</script>
