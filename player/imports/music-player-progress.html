@@ -1,0 +1,113 @@
+<template id="template-main">
+	<style type="text/css">
+		#progress {
+			position: relative;
+			width: 100%;
+			height: 5px;
+			background-color: #000;
+			overflow: visible;
+		}
+		#left {
+			height: 5px;
+			width: 0;
+			background-color: #ff6900;
+		}
+		#drag {
+			position: absolute;
+			left: 0;
+			margin-top: -10px;
+			margin-left: -5px;
+			width: 15px;
+			height: 15px;
+			background-color: #ff6900;
+			border-radius: 50%;
+			cursor: pointer;
+			-webkit-touch-callout: none;
+    		user-select: none;
+    		transition: transform 0.5s cubic-bezier(0.4, 1.3, 0.65, 1);
+		}
+		#drag.dragging,
+		#drag:hover {
+			transform: scale(1.5);
+		}
+	</style>
+	<div id="progress">
+		<div id="left"></div>
+		<span id="drag" draggable=false></span>
+	</div>
+</template>
+
+
+<script type="text/javascript">
+	(function(global){
+		var currentDocument = document.currentScript.ownerDocument;
+
+		var cur = 0;
+		var dragging = false;
+
+		function getTemplate(selector) {
+			return currentDocument.querySelector(selector).content.cloneNode(true);
+		}
+
+		function setCur(per){
+			var that = this;
+			cur = per;
+			per = per * 100 + '%';
+			that.left.style.width = per;
+			that.drag.style.left = per;
+		}
+
+		var proto = Object.create(HTMLElement.prototype, {
+			createdCallback: {
+				value: function() {
+					var that = this;
+					var shadowRoot = that.createShadowRoot();
+					shadowRoot.appendChild(getTemplate('#template-main'));
+
+					var drag = that.drag = shadowRoot.querySelector('#drag');
+					var left = that.left = shadowRoot.querySelector('#left');
+					
+					function mousemove (event) {
+						var rect = drag.parentNode.getBoundingClientRect();
+						var per = (event.clientX - rect.left) / rect.width;
+						per = per > 1 ? 1 : per;
+						per = per < 0 ? 0 : per;
+						setCur.call(that, per);
+					}
+
+					function mousedown (event){
+						event.stopPropagation();
+						event.preventDefault();
+						document.addEventListener('mousemove', mousemove);
+						document.addEventListener('mouseup', mouseup);
+						drag.classList.add('dragging');
+						dragging = true;
+					}
+
+					function mouseup(event) {
+						document.removeEventListener('mousemove', mousemove);
+						document.removeEventListener('mouseup', mouseup);
+						drag.classList.remove('dragging');
+						that.dispatchEvent(new CustomEvent('change', {
+							detail: cur
+						}));
+						dragging = false;
+					}
+
+					drag.onmousedown = mousedown;
+				}
+			},
+			setCur: {
+				value: function(per){
+					!dragging && setCur.call(this, per);
+				}
+			}
+		});
+
+		var HTMLMusicPlayerProgressElement = document.registerElement('music-player-progress', {
+			prototype: proto
+		});
+
+		global.HTMLMusicPlayerProgressElement = HTMLMusicPlayerProgressElement;
+	}(this));
+</script>

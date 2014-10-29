@@ -14,21 +14,22 @@
 			border-radius: 5px;
 			overflow: hidden;
 		}
-		.back {
+		#back {
 			position: relative;
 			width: 100%;
 			height: 100%;
-			background-image: url(http://lingyucoder-demo.qiniudn.com/imgsliders_1.jpg);
 			-moz-filter: blur(3px);
 		    -webkit-filter: blur(3px);
 		    -o-filter: blur(3px);
 		    -ms-filter: blur(3px);
 		    filter: blur(3px);
+		    background-size: 100% 100%;
+		    transition: background-image .5s linear;
 		}
 	</style>
 	<audio id="audio"></audio>
 	<div id="player">
-		<div class="back"></div>
+		<div id="back"></div>
 	</div>
 </template>
 
@@ -58,12 +59,11 @@
 					audio = that.audio = shadowRoot.querySelector('#audio');
 
 					var player = shadowRoot.querySelector('#player');
+					var back = that.back = shadowRoot.querySelector('#back');
 
 					player.appendChild(detail = that.detail = document.createElement('music-player-detail'));
 					player.appendChild(control = that.control = document.createElement('music-player-control'));
 					player.appendChild(list = that.list = document.createElement('music-player-list'));
-
-
 
 					list.addEventListener('delete', function(event){that.remove(event.detail); });
 					list.addEventListener('play', function(event){that.play(event.detail); });
@@ -72,10 +72,15 @@
 					control.addEventListener('play', function(){that.play(); });
 					control.addEventListener('pause', function(){that.pause(); });
 					control.addEventListener('volume', function(event){that.volume(event.detail); });
+					control.addEventListener('current', function(event){that.current(event.detail)});
 					audio.addEventListener('volumechange', function(){control.setVolume(audio.volume); });
 					audio.addEventListener('ended', function(){that.next(); });
-					audio.addEventListener('pause', function(){that.control.setPaused(true); });
-					audio.addEventListener('play', function(){that.control.setPaused(false); });
+					audio.addEventListener('pause', function(){control.setPaused(true); });
+					audio.addEventListener('play', function(){control.setPaused(false); });
+					audio.addEventListener('timeupdate', function(event) {
+						control.setTime(audio.currentTime / audio.duration);
+						detail.setTime(audio.currentTime, audio.duration);
+					});
 
 					control.setVolume(audio.volume);
 				}
@@ -97,14 +102,12 @@
 			},
 			play: {
 				value: function(music){
-					var that = this;
-					that.playMusic();;
+					this.playMusic(music);
 				}
 			},
 			pause: {
 				value: function(){
-					var that = this;
-					that.audio.pause();
+					this.audio.pause();
 				}
 			},
 			next: {
@@ -124,27 +127,51 @@
 			playMusic: {
 				value: function(music){
 					var that = this;
+					var audio = that.audio;
 					if (music) {
 						cur = musics.indexOf(music);
 						if (cur === -1) {
 							musics.push(music);
 							cur = musics.length - 1;
 						}
-						
 					} else {
 						music = musics[cur];
 					}
 					if (!music) {
 						return;
 					}
-					that.audio.setAttribute('src', music.src);
-					that.audio.play();
+					that.back.style['backgroundImage'] = 'url(' + music.cover + ')';
+					if(audio.currentSrc !== music.src) {
+						that.list.setCur(cur);
+						that.detail.setCur({
+							name: music.name,
+							duration: audio.duration,
+							cur: audio.currentTime,
+							author: music.author
+						});
+						audio.setAttribute('src', music.src);
+					}
+					audio.play();
 				}
 			},
 			volume: {
 				value : function(volume){
 					var that = this;
 					that.audio.volume = volume;
+				}
+			},
+			current: {
+				value: function(per){
+					var that = this;
+					var audio = that.audio;
+					var paused = audio.paused;
+					console.log(paused);
+					var duration = audio.duration;
+					if(!duration) {
+						return;
+					}
+					var cur = per * duration;
+					audio.currentTime = Math.floor(cur);
 				}
 			}
 		});

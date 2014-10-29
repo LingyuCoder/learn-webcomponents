@@ -17,3 +17,4 @@ $ ka
 
 * codepen面板：(√)
 * image slider: (√)
+* music player: (√)

@@ -4,11 +4,30 @@
 			position: absolute;
 			top: 0;
 			left: 0;
-			bottom: 60px;
-			right: 38%;
+			bottom: 80px;
+			right: 0;
+			font-family: 'Microsoft YaHei', sans-serif;
+			text-align: center;
+			color: #b2d4dc;
+		}
+		#name {
+			font-size: 50px;
+			margin-top: 70px;
+			font-weight: bolder;
+		}
+		#author {
+			margin-top: 10px;
+		}
+		#time {
+			font-size: 30px;
+			margin-top: 20px;
 		}
 	</style>
-	<div id="detail"></div>
+	<div id="detail">
+		<div id="name"></div>
+		<div id="author"></div>
+		<div id="time"></div>
+	</div>
 </template>
 
 <script type="text/javascript">
@@ -19,12 +38,39 @@
 			return currentDocument.querySelector(selector).content.cloneNode(true);
 		}
 
+		function format(time){
+			time = Math.floor(time);
+			var hour = Math.floor(time / 3600);
+			var min = Math.floor((time - hour * 3600) / 60);
+			var sec = time % 60;
+			min = min < 10 ? '0' + min : min;
+			sec = sec < 10 ? '0' + sec : sec;
+			var result = min + ':' + sec;
+			return result;
+		}
+
 		var proto = Object.create(HTMLElement.prototype, {
 			createdCallback: {
 				value: function() {
 					var that = this;
 					var shadowRoot = that.createShadowRoot();
 					shadowRoot.appendChild(getTemplate('#template-main'));
+					that.name = shadowRoot.querySelector('#name');
+					that.author = shadowRoot.querySelector('#author');
+					that.time = shadowRoot.querySelector('#time');
+				}
+			},
+			setCur: {
+				value: function(detail){
+					var that = this;
+					that.name.textContent = detail.name;
+					that.author.textContent = detail.author;
+				}
+			},
+			setTime: {
+				value: function(cur, duration){
+					var that = this;
+					that.time.textContent = format(cur) + ' / ' + format(duration);
 				}
 			}
 		});
